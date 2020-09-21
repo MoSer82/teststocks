@@ -1,0 +1,146 @@
+<div class="stocks-info">
+    <div class="stocks-info__graph">
+        <div class="stocks-info__candles">
+            <div class="stocks-info__candles-params">
+                <dx-date-box 
+                    [(max)]="endDate"
+                    [(value)]="startDate"
+                    [title]="'Start date'"
+                    (onValueChanged)="loadCandlesData()">
+                </dx-date-box>
+                <dx-date-box class="end-date"
+                    [(min)]="startDate"
+                    [(value)]="endDate"
+                    (onValueChanged)="loadCandlesData()">
+                </dx-date-box>
+                <dx-select-box
+                    [items]="resData"
+                    placeholder="Select resolution"
+                    [(value)]="currentResolution"
+                    (onValueChanged)="loadCandlesData()">
+                </dx-select-box>
+            </div>
+            <div class="stocks-info__candles-content">
+                <dx-chart
+                    id="chart"
+                    [title]="currentStock.name"
+                    [dataSource]="currentStock.stockPrice">
+                    <dxi-series
+                        [name]="currentStock.symbol"
+                        openValueField="o"
+                        highValueField="h"
+                        lowValueField="l"
+                        closeValueField="c">
+                        <dxo-reduction color="red"></dxo-reduction>
+                    </dxi-series>
+                    <dxo-common-series-settings
+                        argumentField="date"
+                        type="candlestick">
+                    </dxo-common-series-settings>
+                    <dxo-legend itemTextPosition="left"></dxo-legend>
+                    <dxi-value-axis [tickInterval]="1">
+                        <dxo-title [text]="currentStock.currency"></dxo-title>
+                        <dxo-label>
+                            <dxo-format
+                                type="currency"
+                                [precision]="0">
+                            </dxo-format>
+                        </dxo-label>
+                    </dxi-value-axis>
+                    <dxo-argument-axis [workdaysOnly]="true">
+                        <dxo-label format="shortDate"></dxo-label>
+                    </dxo-argument-axis>
+                    <dxo-tooltip
+                        [enabled]="true"
+                        location="edge"
+                        [customizeTooltip]="customizeTooltip">
+                    </dxo-tooltip>
+                    <dxo-zoom-and-pan
+                        argumentAxis="both"
+                        valueAxis="both">
+                    </dxo-zoom-and-pan>
+                    <dxo-scroll-bar [visible]="true"></dxo-scroll-bar>
+                    <dxo-loading-indicator [enabled]="true"></dxo-loading-indicator>
+                </dx-chart>
+            </div>
+        </div>
+        <div class="stocks-info__chart" *ngIf="currentStock.company && currentStock.company.rtPrice">
+            <dx-chart
+                [dataSource]="currentStock.company.rtPrice"
+                title="Real-time stock price"
+                [valueAxis]="{
+                    valueType: 'numeric',
+                    grid: {
+                        opacity: 0.2
+                    }
+                }">
+                <dxi-series
+                    argumentField="date"
+                    valueField="price"
+                    type="spline"
+                ></dxi-series>
+                <dxo-legend [visible]="false"></dxo-legend>
+                <dxo-tooltip [enabled]="true"></dxo-tooltip>
+                <dxo-argument-axis type="discrete">
+                    <dxo-grid [visible]="true" [opacity]="0.5"></dxo-grid>
+                </dxo-argument-axis>
+                <dxo-loading-indicator [enabled]="true"></dxo-loading-indicator>
+            </dx-chart>
+        </div>
+    </div>
+    <div class="stocks-info__list">
+        <dx-data-grid
+            [dataSource]="list"
+            [showBorders]="true"
+            [masterDetail]="{enabled: true, template: 'companyDetail'}"
+            keyExpr="symbol"
+            (onRowExpanding)="selectRow($event)"
+            >
+        
+            <dxi-column dataField="symbol" dataType="string" [allowSorting]="true"></dxi-column>
+            <dxi-column dataField="description" dataType="string"></dxi-column>
+            <dxi-column dataField="currency" dataType="string"></dxi-column>
+        
+            <dxo-search-panel
+                [visible]="true"
+                [highlightCaseSensitive]="true"
+            ></dxo-search-panel>
+
+            <dxo-load-panel [enabled]="true"></dxo-load-panel>
+
+            <dxo-paging [pageSize]="20"></dxo-paging>
+            <dxo-pager 
+                [showPageSizeSelector]="true"
+                [allowedPageSizes]="[20, 50, 100]"
+                [showInfo]="true">
+            </dxo-pager>
+
+            <div *dxTemplate="let comp of 'companyDetail'">
+                <div class="company">
+                    <dx-load-indicator [visible]="!comp.data.company"></dx-load-indicator>
+                    <div class="company__inner" *ngIf="comp.data.company">
+                        <div class="company__img">
+                            <img [src]="comp.data.company.logo">
+                        </div>
+                        <div class="company__content">
+                            <div class="company__name">
+                                {{comp.data.company.name}} ({{comp.data.company.ticker}})
+                            </div>
+                            <div class="company__info">
+                                <ul>
+                                    <li><b>Phone</b>{{comp.data.company.phone}}</li>
+                                    <li><b>IPO</b>{{comp.data.company.ipo}}</li>
+                                    <li><b>Market capitalization</b>{{comp.data.company.marketCapitalization}}</li>
+                                    <li><b>Currency</b>{{comp.data.company.currency}}</li>
+                                    <li><b>Web</b><a [href]="comp.data.company.weburl" target="_blank">Visit company site</a></li>
+                                    <li><b>Industry</b>{{comp.data.company.finnhubIndustry}}</li>
+                                    <li><b>Country</b>{{comp.data.company.country}}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </dx-data-grid>
+    </div>
+</div>
